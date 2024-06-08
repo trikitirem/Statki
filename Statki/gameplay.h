@@ -5,9 +5,13 @@
 typedef struct {
 	bool targetHit;
 	bool sunken;
+	Position hitPosition;
 } HitFeedback;
 
-HitFeedback fireShot(Position position);
-void displayShotFeedbackMessage(HitFeedback hitFeedback);
+typedef struct {
+	int ship;
+	int mast;
+} ShipMastPosition;
+
 void gameplayLoop(Ship* fleet);
-Position aim(Position* targetHits, int targetHitsCount, Position* missedHits, int missedHitsCount);
+

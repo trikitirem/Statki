@@ -29,3 +29,11 @@ int findPositionIndex(Position* positions, int size, Position positionToFind) {
     }
     return -1;
 }
+
+void displayShip(Ship ship) {
+    for (int i = 0; i < ship.type; i++) {
+        printf("Maszt %d: \n", i + 1);
+        displayPosition(ship.shipMasts[i].position);
+        printf("\n");
+    }
+}

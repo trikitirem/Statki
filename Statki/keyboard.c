@@ -32,7 +32,7 @@ Position handlePositionInput() {
         }
         else {
             int columnIndex = convertLetterToColumnIndex(colInput);
-            int rowIndex = atoi(&rowInput);
+            int rowIndex = atoi(&rowInput) - 1; // liczone od 0 nie od 1
             
             if (isIndexCorrect(columnIndex) && isIndexCorrect(rowIndex)) {
                 Position position = { columnIndex, rowIndex };

@@ -7,12 +7,62 @@
 #include <stdlib.h>
 #include <stdlib.h>
 
-HitFeedback fireShot(Position position) {
-	HitFeedback hitFeedback;
-	
-	hitFeedback.targetHit = true;
-	hitFeedback.sunken = true;
+Position aim(Position* targetHits, int targetHitsCount, Position* missedHits, int missedHitsCount) {
+	while (true) {
+		Position hitPosition = handlePositionInput();
 
+		bool hitPositionInTargetHits = findPositionIndex(targetHits, targetHitsCount, hitPosition) != -1;
+		bool hitPositionInMissedHits = findPositionIndex(missedHits, missedHitsCount, hitPosition) != -1;
+
+		if (!hitPositionInTargetHits && !hitPositionInMissedHits) {
+			return hitPosition;
+		}
+
+		printf("Juz wykonano strzal na ta pozycje\n");
+	}
+}
+
+ShipMastPosition confirmHit(Ship* fleet, Position hitPosition) {
+	for (int i = 0; i < ALL_SHIPS_COUNT; i++) {		
+		int mast = findPositionIndex(fleet[i].shipMasts, fleet[i].type, hitPosition);
+
+		if (mast != -1) {
+			fleet[i].shipMasts[mast].hit = true;
+			ShipMastPosition shipMastPosition = { i, mast };
+			return shipMastPosition;
+		}
+	}
+
+	ShipMastPosition empty = {-1, -1};
+	return empty;
+}
+
+bool shipSunken (Ship ship) {
+	for (int i = 0; i < ship.type; i++) {
+		if (!ship.shipMasts[i].hit) {
+			return false;
+		}
+		
+	}
+
+	return true;
+}
+
+HitFeedback fireShot(Ship* fleet, Position* targetHits, int targetHitsCount, Position* missedHits, int missedHitsCount) {
+	Position hitPosition = aim(targetHits, targetHitsCount, missedHits, missedHitsCount);
+	ShipMastPosition mastPosition = confirmHit(fleet, hitPosition);
+
+	if (mastPosition.ship == -1 || mastPosition.mast == -1) {
+		HitFeedback negativeHitFeedback = {false, false, hitPosition};
+		return negativeHitFeedback;
+	}
+
+	if (shipSunken(fleet[mastPosition.ship])) {
+		HitFeedback sunkenHitFeedback = { true, true, hitPosition };
+		return sunkenHitFeedback;
+	}
+
+	HitFeedback hitFeedback = { true, false, hitPosition };
 	return hitFeedback;
 }
 
@@ -30,45 +80,27 @@ void displayShotFeedbackMessage(HitFeedback hitFeedback) {
 	printf("\n");
 }
 
-Position aim(Position* targetHits, int targetHitsCount, Position* missedHits, int missedHitsCount) {
-	while(true) {
-		Position hitPosition = handlePositionInput();
-
-		bool hitPositionInTargetHits = findPositionIndex(targetHits, targetHitsCount, hitPosition) != -1;
-		bool hitPositionInMissedHits = findPositionIndex(missedHits, missedHitsCount, hitPosition) != -1;
-
-		if (!hitPositionInTargetHits && !hitPositionInMissedHits) {
-			return hitPosition;
-		}
-
-		printf("Juz wykonano strzal na ta pozycje\n");
-	}
-}
-
 void gameplayLoop(Ship* fleet) {
 	int targetHitsCount = 0;
-	Position targetHits[ALL_SHIPS_MODULES];
+	Position targetHits[ALL_SHIPS_MASTS];
 
 	int missedHitsCount = 0;
-	Position missedHits[BOARD_SIZE * BOARD_SIZE - ALL_SHIPS_MODULES];
+	Position missedHits[BOARD_SIZE * BOARD_SIZE - ALL_SHIPS_MASTS];
 
 	int sunkenCount = 0;
 
-	while (sunkenCount < 3) {
+	while (sunkenCount < ALL_SHIPS_COUNT) {
 		displayBoard(targetHits, targetHitsCount, missedHits, missedHitsCount);
-
-		Position hitPosition = aim(targetHits, targetHitsCount, missedHits, missedHitsCount);
-
-		HitFeedback hitFeedback = fireShot(hitPosition);
+		HitFeedback hitFeedback = fireShot(fleet, targetHits, targetHitsCount, missedHits, missedHitsCount);
 
 		system("cls");
 
 		if (!hitFeedback.targetHit) {
-			missedHits[missedHitsCount] = hitPosition;
+			missedHits[missedHitsCount] = hitFeedback.hitPosition;
 			missedHitsCount++;
 		}
 		else {
-			targetHits[targetHitsCount] = hitPosition;
+			targetHits[targetHitsCount] = hitFeedback.hitPosition;
 			targetHitsCount++;
 
 			if (hitFeedback.sunken) sunkenCount++;
