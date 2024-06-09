@@ -1,6 +1,17 @@
 #pragma once
 #include "common.h"
 
-#define PREDEFINED_FLEATS_COUNT 5
+typedef enum {
+    VERTICAL,
+    HORIZONTAL
+} Direction;
 
-Ship* getFleet();
+
+Ship* getFleet(char* fileName);
+Ship* generateFleet();
+
+int mapShipTypeToShipCount(ShipType shipType);
+bool isMastOnBoard(Position position);
+Position positionMast(Position previousMastPosition, Direction direction);
+bool collides(Position* occupiedPositions, int occupiedPositionsCount, Ship ship);
+Ship generateShip(ShipType shipType, Ship* fleet, int fleetSize);

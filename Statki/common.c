@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Funckcja poruwnuj¹ca dwie pozycje
+// Zwraca prawdê gdy dla obydwu pozycji koordynaty x i y s¹ takie same
 bool areThePositionsEqual(Position position1, Position position2) {
 	if (position1.x == position2.x && position1.y == position2.y)
 		return true;
@@ -10,30 +12,32 @@ bool areThePositionsEqual(Position position1, Position position2) {
 	return false;
 }
 
-void displayPosition(Position position) {
-	printf("x: %d, y: %d", position.x, position.y);
-}
-
-void displayPositionArray(Position* positions, int size) {
-    for (int i = 0; i < size; i++) {
-        displayPosition(positions[i]);
-        printf("\n");
-    }
-}
-
+// Funkcja sprawdzaj¹ca czy w tablicy pozycji wystêpuje podana
+// Zwraca indeks znalezionej pozycji, lub -1 gdy taka nie zostanie znaleziona
 int findPositionIndex(Position* positions, int size, Position positionToFind) {
     for (int i = 0; i < size; i++) {
-        if (positions[i].x == positionToFind.x && positions[i].y == positionToFind.y) {
+        if (areThePositionsEqual(positions[i], positionToFind)) {
             return i;
         }
     }
     return -1;
 }
 
-void displayShip(Ship ship) {
-    for (int i = 0; i < ship.type; i++) {
-        printf("Maszt %d: \n", i + 1);
-        displayPosition(ship.shipMasts[i].position);
-        printf("\n");
-    }
+// Konwertuje literê na liczbê, która mo¿e byæ u¿yta jako koordynata
+int convertLetterToCoordinate(char letter) {
+    return (int)toupper(letter) - 65;
+}
+
+// Sprawdza czy podana koordynata mo¿e le¿eæ na planszy gry
+bool isCoordinateCorrect(int index) {
+    if (index >= 0 && index < BOARD_SIZE)
+        return true;
+
+    return false;
+}
+
+// Dodaje przesuniêcie do pozycji
+Position addOffsetToPosition(Position position, Position offset) {
+    Position newPosition = { position.x + offset.x, position.y + offset.y };
+    return newPosition;
 }
