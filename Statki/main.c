@@ -3,13 +3,13 @@
 #include <stdlib.h>
 #include "stdio.h"
 #include "common.h"
+#include "keyboard.h"
 
-char filesWithFleets[][20] = { "fleet1.txt" };
+char filesWithFleets[][20] = { "fleet1.txt", "fleet2.txt", "fleet3.txt", "fleet4.txt", "fleet5.txt" };
 
 int main() {
-    /*
     int currentGame = 0;
-    while (true);
+    while (true)
     {
         Ship* fleet = currentGame < 5 ? getFleet(filesWithFleets[currentGame]) : generateFleet();
         if (fleet != NULL) {
@@ -18,13 +18,13 @@ int main() {
         
         currentGame++;
         freeFleetMemory(fleet);
-    }
-    */
 
-    Ship* fleet = generateFleet();
-    if (fleet != NULL) {
-        gameplayLoop(fleet);
+        if (!getUserConfirmation()) {
+            break;
+        }
+
+
+        system('cls');
     }
-    
     return 0;
 }

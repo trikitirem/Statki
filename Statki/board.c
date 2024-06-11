@@ -9,6 +9,7 @@ void displayRowNumber (index) {
     printf("%2d ", index + 1);
 }
 
+// Funkcja wyœwietlaj¹ca konkretne pole na planszy
 void displayBoardField(Position* targetHits, int targetHitsCount, Position* missedHits, int missedHitsCount, Position boardFieldPosition) {
     if(findPositionIndex(targetHits, targetHitsCount, boardFieldPosition) != -1){
         printf("%c ", 'x');
@@ -21,7 +22,7 @@ void displayBoardField(Position* targetHits, int targetHitsCount, Position* miss
     }
 }
 
-
+// Funkcja wyœwietlaj¹ca planszê gry
 void displayBoard(Position* targetHits, int targetHitsCount, Position* missedHits, int missedHitsCount) {
     displayColumnLetters();
     for (int i = 0; i < BOARD_SIZE; i++) {

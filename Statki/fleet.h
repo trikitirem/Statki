@@ -6,6 +6,12 @@ typedef enum {
     HORIZONTAL
 } Direction;
 
+typedef struct {
+    Position* positions;
+    int size;
+} PositionArray;
+
+
 // Funkcja odczytuj¹ca flotê z pliku
 Ship* getFleet(char* fileName);
 
@@ -34,3 +40,25 @@ int mapShipTypeToShipCount(ShipType shipType);
 // Do umiejscowienia brany jest pod uwagê kierunek u³o¿enia statku
 Position positionMast(Position previousMastPosition, Direction direction);
 
+// Funkcja sprawdzaj¹ca kolizje z innymi statkami
+// Zasada dzia³ania:
+// Aby aby sprawdzic czy pozycja i pole wokó³ niej nie s¹ okupowane dodawane s¹ do niej przesuniêcia.
+// Przesuniêcia s¹ generowane w pêtlach.
+// Je¿eli przesuniêcie w osi x bêdzie równe -1, to sprawdzamy pozycje z lewej strony od punktu s¹ okupowane, je¿eli 1 to z prawej
+// Dla osi y dzia³a to tak samo. 
+// W taki sposób mo¿emy sprawdziæ wszystkie pozycje wokó³ naszego pola i nasze pole
+bool checkCollision(Position occupiedPosition, Position shipMastPosition);
+
+// Funkcja sprawdzaj¹ca czy okreœlona pozycja na tablicy jest ju¿ okupowana i czy nie koliduje z innymi statkami
+bool isPositionOccupied(Position position, Ship* fleet, int fleetSize, int boardSize);
+
+// Funkcja sprawdzaj¹ca czy mo¿na na danym umieœciæ pierwszy maszt statku poziomego
+bool canPlaceShipHorizontally(int x, int y, ShipType shipType, Ship* fleet, int fleetSize);
+
+// Funkcja sprawdzaj¹ca czy mo¿na na danym umieœciæ pierwszy maszt statku pionowego
+bool canPlaceShipVertically(int x, int y, ShipType shipType, Ship* fleet, int fleetSize);
+
+// Funkcja zwracaj¹ca wszystkie punkty w którym mo¿na umiejscowiæ statek
+// Przy sprawdzaniu brane s¹ pod uwagê: d³ugoœæ statku, kierunek, rozmieszczenie innych statków
+// Zwrócone punkty mog¹ pos³u¿yæ jako koordynata pierwszego masztu statku
+PositionArray findAvailableShipPositions(ShipType shipType, Ship* fleet, int fleetSize, Direction direction);

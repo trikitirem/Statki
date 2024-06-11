@@ -13,10 +13,10 @@
 // Powtarzany jest w niej cykl gry, do czasu a¿ nie zostan¹ zatopione wszystkie statki
 void gameplayLoop(Ship* fleet) {
 	int targetHitsCount = 0;
-	Position targetHits[ALL_SHIPS_MASTS];
+	Position* targetHits= NULL;
 
 	int missedHitsCount = 0;
-	Position missedHits[BOARD_SIZE * BOARD_SIZE - ALL_SHIPS_MASTS];
+	Position* missedHits = NULL;
 
 	int sunkenCount = 0;
 
@@ -27,20 +27,23 @@ void gameplayLoop(Ship* fleet) {
 		system("cls");
 
 		if (!hitFeedback.targetHit) {
-			missedHits[missedHitsCount] = hitFeedback.hitPosition;
-			missedHitsCount++;
+			missedHits = realloc(missedHits, (missedHitsCount + 1) * sizeof(Position));
+			missedHits[missedHitsCount++] = hitFeedback.hitPosition;
 		}
 		else {
-			targetHits[targetHitsCount] = hitFeedback.hitPosition;
-			targetHitsCount++;
+			targetHits = realloc(targetHits, (targetHitsCount + 1) * sizeof(Position));
+			targetHits[targetHitsCount++] = hitFeedback.hitPosition;
 
 			if (hitFeedback.sunken) sunkenCount++;
 		}
 		displayShotFeedbackMessage(hitFeedback);
 	}
 
+	free(targetHits);
+	free(missedHits);
+
 	system("cls");
-	printf("Wygranko\n\n\n");
+	printf("\n\n\nWygrana!!!!!!\n\n\n");
 }
 
 // Funkcja pozwalaj¹ca wybraæ koordynaty celu

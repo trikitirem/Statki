@@ -9,11 +9,6 @@
 Position verticalOffset = { 0, 1 };
 Position horizontalOffset = { 1, 0 };
 
-typedef struct {
-    Position* positions;
-    int size;
-} PositionArray;
-
 // Funkcja generuj¹ca flotê statków
 // Zasada dzia³ania:
 // 1. Iterujemy po typach statków, w kolejnoœci od najwiêkszego do najmniejszego
@@ -23,6 +18,8 @@ typedef struct {
 Ship* generateFleet() {
     Ship* fleet = NULL;
     int tempFleetSize = 0;
+
+    srand(time(NULL));
 
     // generowanie statków, zaczynaj¹c od najwiêkszych, bo bêdzie mniej problemów z kolizjami
     for (ShipType shipType = FOUR_MAST; shipType >= SINGLE_MAST; shipType--) {
@@ -38,7 +35,7 @@ Ship* generateFleet() {
 
 // Funkcja odczytuj¹ca flotê z pliku
 Ship* getFleet(char* fileName) {
-    Ship* fleet= (Ship*)malloc(FLEET_SIZE * sizeof(Ship));
+    Ship* fleet=(Ship*)malloc(FLEET_SIZE * sizeof(Ship));
     char line[256];
 
     FILE* file = fopen(fileName, "r");
@@ -101,10 +98,17 @@ Position positionMast(Position previousMastPosition, Direction direction) {
     return addOffsetToPosition(previousMastPosition, horizontalOffset);
 }
 
+// Funkcja sprawdzaj¹ca kolizje z innymi statkami
+// Zasada dzia³ania:
+// Aby aby sprawdzic czy pozycja i pole wokó³ niej nie s¹ okupowane dodawane s¹ do niej przesuniêcia.
+// Przesuniêcia s¹ generowane w pêtlach.
+// Je¿eli przesuniêcie w osi x bêdzie równe -1, to sprawdzamy pozycje z lewej strony od punktu s¹ okupowane, je¿eli 1 to z prawej
+// Dla osi y dzia³a to tak samo. 
+// W taki sposób mo¿emy sprawdziæ wszystkie pozycje wokó³ naszego pola i nasze pole
 bool checkCollision(Position occupiedPosition, Position shipMastPosition){
-    for (int i = -1; i <= 1; i++) {
-        for (int j = -1; i <= 1; i++) {
-            if (areThePositionsEqual(occupiedPosition, addOffsetToPosition(shipMastPosition, (Position){i, j}))) {
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            if (areThePositionsEqual(occupiedPosition, addOffsetToPosition(shipMastPosition, (Position){x, y}))) {
                 return true;
             }
         }
@@ -126,9 +130,10 @@ bool isPositionOccupied(Position position, Ship* fleet, int fleetSize, int board
     return false;
 }
 
+// Funkcja sprawdzaj¹ca czy mo¿na na danym umieœciæ pierwszy maszt statku poziomego
 bool canPlaceShipHorizontally(int x, int y, ShipType shipType, Ship* fleet, int fleetSize) {
     if (x + shipType <= BOARD_SIZE) {
-        int freeHorizontalSpots = 1;
+        int freeHorizontalSpots = 0;
         for (int i = 0; i < shipType; i++) {
             if (!isPositionOccupied((Position) { x + i, y }, fleet, fleetSize, BOARD_SIZE)) {
                 freeHorizontalSpots++;
@@ -144,6 +149,7 @@ bool canPlaceShipHorizontally(int x, int y, ShipType shipType, Ship* fleet, int 
     return false;
 }
 
+// Funkcja sprawdzaj¹ca czy mo¿na na danym umieœciæ pierwszy maszt statku pionowego
 bool canPlaceShipVertically(int x, int y, ShipType shipType, Ship* fleet, int fleetSize) {
     if (y + shipType <= BOARD_SIZE) {
    
@@ -198,19 +204,17 @@ Ship generateShip(ShipType shipType, Ship* fleet, int fleetSize) {
     ship.type = shipType;
     ship.shipMasts = (ShipMast*)malloc(shipType * sizeof(ShipMast));
 
-    srand(time(NULL));
     Direction direction = rand() % 2;
-    printf("direction: %d \n", direction);
-
     PositionArray availableShipPositions = findAvailableShipPositions(shipType, fleet, fleetSize, direction);
 
-    srand(time(NULL));
-    Position firstMastPosition = availableShipPositions.positions[rand() % availableShipPositions.size];
+    if (availableShipPositions.size != 0) {
+        Position firstMastPosition = availableShipPositions.positions[rand() % availableShipPositions.size];
 
-    ship.shipMasts[0] = (ShipMast){ firstMastPosition, false };
-    for (int i = 1; i < shipType; i++) {
-        Position mastPosition = positionMast(ship.shipMasts[i - 1].position, direction);
-        ship.shipMasts[i] = (ShipMast){ mastPosition, false };
+        ship.shipMasts[0] = (ShipMast){ firstMastPosition, false };
+        for (int i = 1; i < shipType; i++) {
+            Position mastPosition = positionMast(ship.shipMasts[i - 1].position, direction);
+            ship.shipMasts[i] = (ShipMast){ mastPosition, false };
+        }
+        return ship;
     }
-    return ship;
 }

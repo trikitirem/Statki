@@ -59,5 +59,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="fleet1.txt" />
+    <Text Include="fleet2.txt" />
+    <Text Include="fleet3.txt" />
+    <Text Include="fleet4.txt" />
+    <Text Include="fleet5.txt" />
   </ItemGroup>
 </Project>

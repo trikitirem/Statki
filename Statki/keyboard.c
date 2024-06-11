@@ -34,3 +34,25 @@ Position getPositionInput() {
         }
     }
 }
+
+// Funkcja która sprawdza czy u¿ytkownik chce kontynuowaæ gre
+bool getUserConfirmation() {
+    printf("Kontynuowac gre? (t/n)");
+    char choice;
+
+    while(true) {
+        fseek(stdin, 0, SEEK_END);
+        if (scanf_s("%c", &choice, (unsigned int)sizeof(choice)) < 1 || ferror(stdin)) {
+            printf("Wystapil blad przy wczytywaniu wejscia z klawiatury!\n");
+        }
+        else if(toupper(choice) == 'T') {
+            return true;
+        }
+        else if (toupper(choice) == 'N') {
+            return false;
+        }
+        else {
+            printf("Wpisz t lub n\n");
+        }
+    }
+}

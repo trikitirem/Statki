@@ -7,3 +7,6 @@
 // Funkcja pobieraj¹ca koordynaty z klawiatury,
 // konwertuje je na pozycjê, by ³atwo mo¿na by³o j¹ porównaæ z pozycj¹ statków
 Position getPositionInput();
+
+// Funkcja która sprawdza czy u¿ytkownik chce kontynuowaæ gre
+bool getUserConfirmation();
