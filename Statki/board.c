@@ -28,7 +28,7 @@ void displayBoard(Position* targetHits, int targetHitsCount, Position* missedHit
         displayRowNumber(i);
         for (int j = 0; j < BOARD_SIZE; j++) {
             Position boardFieldPosition = {j, i};
-            displayBoardField(targetHits, targetHitsCount, missedHits, missedHitsCount, boardFieldPosition);
+            displayBoardField(targetHits, targetHitsCount, missedHits, missedHitsCount, (Position) {j,i});
         }
         printf("\n");
     }

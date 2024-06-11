@@ -2,18 +2,29 @@
 #include "fleet.h"
 #include <stdlib.h>
 #include "stdio.h"
+#include "common.h"
 
 char filesWithFleets[][20] = { "fleet1.txt" };
 
 int main() {
-    Ship* fleet = getFleet(filesWithFleets[0]);
+    /*
+    int currentGame = 0;
+    while (true);
+    {
+        Ship* fleet = currentGame < 5 ? getFleet(filesWithFleets[currentGame]) : generateFleet();
+        if (fleet != NULL) {
+            gameplayLoop(fleet);
+        }
+        
+        currentGame++;
+        freeFleetMemory(fleet);
+    }
+    */
 
-    // Ship* randomFleet = generateFleet();
-    
-
+    Ship* fleet = generateFleet();
     if (fleet != NULL) {
         gameplayLoop(fleet);
     }
-
+    
     return 0;
 }

@@ -9,7 +9,9 @@ void displayInputErrorMessage() {
     printf("Nieprawilowe koordynaty!\n");
 }
 
-Position handlePositionInput() {
+// Funkcja pobieraj¹ca koordynaty z klawiatury,
+// konwertuje je na pozycjê, by ³atwo mo¿na by³o j¹ porównaæ z pozycj¹ statków
+Position getPositionInput() {
     char colInput;
     int rowInput;
 

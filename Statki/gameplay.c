@@ -20,7 +20,7 @@ void gameplayLoop(Ship* fleet) {
 
 	int sunkenCount = 0;
 
-	while (sunkenCount < ALL_SHIPS_COUNT) {
+	while (sunkenCount < FLEET_SIZE) {
 		displayBoard(targetHits, targetHitsCount, missedHits, missedHitsCount);
 		HitFeedback hitFeedback = fireShot(fleet, targetHits, targetHitsCount, missedHits, missedHitsCount);
 
@@ -47,7 +47,7 @@ void gameplayLoop(Ship* fleet) {
 // Je¿eli koordynaty by³y ju¿ wczeœniej podane, u¿ytkownik zostanie poproszony o podanie innych 
 Position aim(Position* targetHits, int targetHitsCount, Position* missedHits, int missedHitsCount) {
 	while (true) {
-		Position hitPosition = handlePositionInput();
+		Position hitPosition = getPositionInput();
 
 		bool hitPositionInTargetHits = findPositionIndex(targetHits, targetHitsCount, hitPosition) != -1;
 		bool hitPositionInMissedHits = findPositionIndex(missedHits, missedHitsCount, hitPosition) != -1;
@@ -76,18 +76,16 @@ int findMastPositionIndex(Ship ship, Position hitPosition) {
 // Zwraca indeks statku oraz indeks masztu
 // Gdy nie dosz³o do trafienia, dla obydwu parametrów zwracane jest -1
 ShipMastPosition confirmHit(Ship* fleet, Position hitPosition) {
-	for (int i = 0; i < ALL_SHIPS_COUNT; i++) {		
+	for (int i = 0; i < FLEET_SIZE; i++) {		
 		int mast = findMastPositionIndex(fleet[i], hitPosition);
 
 		if (mast != -1) {
 			fleet[i].shipMasts[mast].hit = true;
-			ShipMastPosition shipMastPosition = { i, mast };
-			return shipMastPosition;
+			return(ShipMastPosition) {i, mast};
 		}
 	}
 
-	ShipMastPosition empty = {-1, -1};
-	return empty;
+	return (ShipMastPosition){-1, -1};
 }
 
 // Funkcja sprawdzaj¹ca czy podany statek zaton¹³
@@ -109,17 +107,14 @@ HitFeedback fireShot(Ship* fleet, Position* targetHits, int targetHitsCount, Pos
 	ShipMastPosition mastPosition = confirmHit(fleet, hitPosition);
 
 	if (mastPosition.ship == -1 || mastPosition.mast == -1) {
-		HitFeedback negativeHitFeedback = {false, false, hitPosition};
-		return negativeHitFeedback;
+		return (HitFeedback) { false, false, hitPosition };
 	}
 
 	if (shipSunken(fleet[mastPosition.ship])) {
-		HitFeedback sunkenHitFeedback = { true, true, hitPosition };
-		return sunkenHitFeedback;
+		return (HitFeedback) { true, true, hitPosition };
 	}
 
-	HitFeedback hitFeedback = { true, false, hitPosition };
-	return hitFeedback;
+	return (HitFeedback) { true, false, hitPosition };
 }
 
 // Funkcja wyœwietlaj¹ca u¿ytkownikowi informacjê o dokonanym przez niego strzale 

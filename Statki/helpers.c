@@ -1,6 +1,8 @@
 #include "common.h"
 #include <stdio.h>
 
+// W tym pliku znajduj¹ siê funkcje pomocnicze, które by³y pomocne przy debugowaniu
+
 void displayPosition(Position position) {
     printf("x: %d, y: %d", position.x, position.y);
 }
@@ -21,7 +23,7 @@ void displayShip(Ship ship) {
 }
 
 void displayFleet(Ship* fleet) {
-    for (int i = 0; i < ALL_SHIPS_COUNT; i++) {
+    for (int i = 0; i < FLEET_SIZE; i++) {
         displayShip(fleet[i]);
         printf("\n");
     }

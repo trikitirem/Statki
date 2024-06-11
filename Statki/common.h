@@ -12,7 +12,7 @@
 #define TWO_MAST_COUNT 3
 #define THREE_MAST_COUNT  2
 #define FOUR_MAST_COUNT  1
-#define ALL_SHIPS_COUNT (SINGLE_MAST_COUNT + TWO_MAST_COUNT + THREE_MAST_COUNT + FOUR_MAST_COUNT)
+#define FLEET_SIZE (SINGLE_MAST_COUNT + TWO_MAST_COUNT + THREE_MAST_COUNT + FOUR_MAST_COUNT)
 #define ALL_SHIPS_MASTS (SINGLE_MAST_COUNT * 4 + TWO_MAST_COUNT * 3 + THREE_MAST_COUNT * 2 + FOUR_MAST_COUNT)
 
 typedef enum {
@@ -25,7 +25,6 @@ typedef enum {
 typedef struct {
     int x;
     int y;
-
 } Position;
 
 typedef struct {
@@ -54,3 +53,6 @@ bool isCoordinateCorrect(int index);
 
 // Dodaje przesuniêcie do pozycji
 Position addOffsetToPosition(Position position, Position offset);
+
+// Zwalnia pamiêæ zarezerwowan¹ na konkretn¹ flotê
+void freeFleetMemory(Ship* fleet);

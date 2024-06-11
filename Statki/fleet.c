@@ -4,25 +4,32 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include "helpers.h"
 
 Position verticalOffset = { 0, 1 };
 Position horizontalOffset = { 1, 0 };
 
+typedef struct {
+    Position* positions;
+    int size;
+} PositionArray;
+
 // Funkcja generuj¹ca flotê statków
+// Zasada dzia³ania:
+// 1. Iterujemy po typach statków, w kolejnoœci od najwiêkszego do najmniejszego
+//    (Zaczynaj¹c od postawienia wiêkszych statków wyst¹pi mniejsze ryzyko nie znalezienia miejsca na statek)
+// 2. Dla ka¿dego typu statku pobieramy iloœæ, któr¹ dla niego nale¿y wygenerowaæ
+// 3. Statek dodajemy do tablicy
 Ship* generateFleet() {
-    Ship* fleet = (Ship*)malloc(ALL_SHIPS_COUNT * sizeof(Ship));
+    Ship* fleet = NULL;
     int tempFleetSize = 0;
 
     // generowanie statków, zaczynaj¹c od najwiêkszych, bo bêdzie mniej problemów z kolizjami
     for (ShipType shipType = FOUR_MAST; shipType >= SINGLE_MAST; shipType--) {
         int shipCount = mapShipTypeToShipCount(shipType);
-
-        // dla ka¿dego typu statku generujemy okreœlon¹ dla niego iloœæ statków
         for (int i = 0; i < shipCount; i++) {
-            Ship ship = generateShip(shipType, fleet, tempFleetSize);
-            fleet[tempFleetSize] = ship;
-
-            tempFleetSize++;
+            fleet = realloc(fleet, (tempFleetSize + 1) * sizeof(Ship));
+            fleet[tempFleetSize++] = generateShip(shipType, fleet, tempFleetSize);
         }
     }
 
@@ -31,7 +38,7 @@ Ship* generateFleet() {
 
 // Funkcja odczytuj¹ca flotê z pliku
 Ship* getFleet(char* fileName) {
-    Ship* fleet= (Ship*)malloc(ALL_SHIPS_COUNT * sizeof(Ship));
+    Ship* fleet= (Ship*)malloc(FLEET_SIZE * sizeof(Ship));
     char line[256];
 
     FILE* file = fopen(fileName, "r");
@@ -40,7 +47,7 @@ Ship* getFleet(char* fileName) {
         return NULL;
     }
 
-    for (int i = 0; i < ALL_SHIPS_COUNT; i++) {
+    for (int i = 0; i < FLEET_SIZE; i++) {
         int shipsMastCount, rowInput;
         char colInput;
 
@@ -60,7 +67,7 @@ Ship* getFleet(char* fileName) {
         }
 
 
-        if (i != ALL_SHIPS_COUNT - 1) {
+        if (i != FLEET_SIZE - 1) {
             fgets(line, sizeof(line), file); // odczytaj pust¹ liniê która odziela statki
         }
     }
@@ -70,7 +77,7 @@ Ship* getFleet(char* fileName) {
     return fleet;
 }
 
-
+// Funkcja pomocnicza mapuj¹ca typ statku na iloœæ statków do wygenerowania
 int mapShipTypeToShipCount(ShipType shipType) {
     switch (shipType){
     case SINGLE_MAST:
@@ -84,15 +91,8 @@ int mapShipTypeToShipCount(ShipType shipType) {
     }
 }
 
-bool isMastOnBoard (Position position) {
-    if (position.x >= 0 && position.x <= 9 && position.y >= 0 && position.y <= 9) {
-        return true;
-    }
-
-    return false;
-}
-
-
+// Funkcja pomocnicza pozwalaj¹ca umieœciæ maszt statku na planszy, na podstawie poprzedniego masztu.
+// Do umiejscowienia brany jest pod uwagê kierunek u³o¿enia statku
 Position positionMast(Position previousMastPosition, Direction direction) {
     if (direction == VERTICAL) {
         return addOffsetToPosition(previousMastPosition, verticalOffset);
@@ -101,24 +101,10 @@ Position positionMast(Position previousMastPosition, Direction direction) {
     return addOffsetToPosition(previousMastPosition, horizontalOffset);
 }
 
-Position* extractMastPositionsFromShip(Ship ship) {
-    Position* currentShipMastPositions = (Position*)malloc(ship.type * sizeof(Position));
-    for (int i = 0; i < ship.type; i++) {
-        currentShipMastPositions[i] = ship.shipMasts[i].position;
-    }
-    
-    return currentShipMastPositions;
-}
-
 bool checkCollision(Position occupiedPosition, Position shipMastPosition){
-    Position offset;
-
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; i <= 1; i++) {
-            offset.x = i;
-            offset.y = j;
-            
-            if (areThePositionsEqual(occupiedPosition, addOffsetToPosition(shipMastPosition, offset))) {
+            if (areThePositionsEqual(occupiedPosition, addOffsetToPosition(shipMastPosition, (Position){i, j}))) {
                 return true;
             }
         }
@@ -127,61 +113,104 @@ bool checkCollision(Position occupiedPosition, Position shipMastPosition){
     return false;
 }
 
-bool collides(Position* occupiedPositions, int occupiedPositionsCount, Ship ship) {
-    Position* currentShipMastPositions = extractMastPositionsFromShip(ship);
-
-    for (int i = 0; i < occupiedPositionsCount; i++) {
+// Funkcja sprawdzaj¹ca czy okreœlona pozycja na tablicy jest ju¿ okupowana i czy nie koliduje z innymi statkami
+bool isPositionOccupied(Position position, Ship* fleet, int fleetSize, int boardSize) {
+    for (int i = 0; i < fleetSize; i++) {
+        Ship ship = fleet[i];
         for (int j = 0; j < ship.type; j++) {
-            if (checkCollision(occupiedPositions[i], currentShipMastPositions[j])) {
-                free(currentShipMastPositions);
+            if (checkCollision(ship.shipMasts[j].position, position)) {
                 return true;
             }
         }
     }
-
-    free(currentShipMastPositions);
     return false;
 }
 
+bool canPlaceShipHorizontally(int x, int y, ShipType shipType, Ship* fleet, int fleetSize) {
+    if (x + shipType <= BOARD_SIZE) {
+        int freeHorizontalSpots = 1;
+        for (int i = 0; i < shipType; i++) {
+            if (!isPositionOccupied((Position) { x + i, y }, fleet, fleetSize, BOARD_SIZE)) {
+                freeHorizontalSpots++;
+            }
+            else {
+                break;
+            }
+        }
+        
+        return freeHorizontalSpots == shipType;
+    }
 
-Ship generateShip(ShipType shipType, Ship* fleet, int fleetSize) {
-    Ship ship;
-    ship.type = shipType;
+    return false;
+}
 
-    // Lista ju¿ zajêtych pozycji, bêdzie u¿yta do wykrywania kolizji
-    Position* occupiedPositions = (Position*)malloc(ALL_SHIPS_MASTS * sizeof(Position));
-    int occupiedPositionsCount = 0;
-
-    srand(time(NULL));
-    while (true) {
-        bool allMastsOnBoard = true;
-        ship.shipMasts = (ShipMast*)malloc(shipType * sizeof(ShipMast));
-
-        Position positionOfFirstMast = { rand() % BOARD_SIZE, rand() % BOARD_SIZE };
-        Direction direction = rand() % 2;
-
-        ship.shipMasts[0].position = positionOfFirstMast;
-        ship.shipMasts[0].hit = false;
-
-        // generujemy resztê masztów
-        for (int i = 1; i < shipType; i++) {
-            Position mastPosition = positionMast(ship.shipMasts[i - 1].position, direction);
-            bool onBoard = isMastOnBoard(mastPosition);
-
-            if (!onBoard) {
-                allMastsOnBoard = false;
+bool canPlaceShipVertically(int x, int y, ShipType shipType, Ship* fleet, int fleetSize) {
+    if (y + shipType <= BOARD_SIZE) {
+   
+        int freeVerticalSpots = 0;
+        for (int i = 0; i < shipType; i++) {
+            if (!isPositionOccupied((Position){x, y + i}, fleet, fleetSize, BOARD_SIZE)) {
+                freeVerticalSpots++;
+            }
+            else {
                 break;
             }
         }
 
-        // je¿eli statek w ca³oœci znajduje siê na planszy i nie koliduje z innymi statkami to go zwróæ (pêtla siê zatrzyma)
-        if (allMastsOnBoard && !collides(occupiedPositions, occupiedPositionsCount, ship)) {
-            return ship;
-        }
-        else {
-            free(ship.shipMasts);
-        }
+        return freeVerticalSpots == shipType;
     }
 
-    free(occupiedPositions);
+    return false;
+}
+
+// Funkcja zwracaj¹ca wszystkie punkty w którym mo¿na umiejscowiæ statek
+// Przy sprawdzaniu brane s¹ pod uwagê: d³ugoœæ statku, kierunek, rozmieszczenie innych statków
+// Zwrócone punkty mog¹ pos³u¿yæ jako koordynata pierwszego masztu statku
+PositionArray findAvailableShipPositions(ShipType shipType, Ship* fleet, int fleetSize, Direction direction) {
+    PositionArray availablePositions = {NULL, 0};
+    
+    for (int y = 0; y < BOARD_SIZE; y++) {
+        for (int x = 0; x < BOARD_SIZE; x++) {
+            bool canPlaceShip = direction == VERTICAL ?
+                canPlaceShipVertically(x, y, shipType, fleet, fleetSize) : canPlaceShipHorizontally(x, y, shipType, fleet, fleetSize);
+            
+            if(canPlaceShip) {
+                availablePositions.positions = realloc(availablePositions.positions, (availablePositions.size + 1) * sizeof(Position));
+                availablePositions.positions[availablePositions.size++] = (Position){ x, y };
+            }
+        }
+    }
+    
+
+    return availablePositions;
+}
+
+// Funkcja generuj¹ca statek
+// Zasada dzia³ania:
+// 1. Losowany jest kierunek w jakim postawiony mo¿e byæ statek
+// 2. Wyszukiwane s¹ pozycje w których statek mo¿e byæ umieszczony.
+//    Przy okreœlaniu tych pozycji brane s¹ pod uwagê: d³ugoœæ statku, kierunek, rozmieszczenie innych statków
+// 3. Spoœród wyszukanych pozycji losowana jest jedna z nich
+// 4. Wylosowana pozycja staje siê koordynat¹ pierwszego masztu, kolejne maszty s¹ generowane poprzez przesuniêcie (offset) tej koordynaty w wylosowanym kierunku
+// 5. Maszty zostaj¹ dodane do statku
+Ship generateShip(ShipType shipType, Ship* fleet, int fleetSize) {
+    Ship ship;
+    ship.type = shipType;
+    ship.shipMasts = (ShipMast*)malloc(shipType * sizeof(ShipMast));
+
+    srand(time(NULL));
+    Direction direction = rand() % 2;
+    printf("direction: %d \n", direction);
+
+    PositionArray availableShipPositions = findAvailableShipPositions(shipType, fleet, fleetSize, direction);
+
+    srand(time(NULL));
+    Position firstMastPosition = availableShipPositions.positions[rand() % availableShipPositions.size];
+
+    ship.shipMasts[0] = (ShipMast){ firstMastPosition, false };
+    for (int i = 1; i < shipType; i++) {
+        Position mastPosition = positionMast(ship.shipMasts[i - 1].position, direction);
+        ship.shipMasts[i] = (ShipMast){ mastPosition, false };
+    }
+    return ship;
 }

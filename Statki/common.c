@@ -41,3 +41,12 @@ Position addOffsetToPosition(Position position, Position offset) {
     Position newPosition = { position.x + offset.x, position.y + offset.y };
     return newPosition;
 }
+
+// Zwalnia pamiêæ zarezerwowan¹ na konkretn¹ flotê
+void freeFleetMemory(Ship* fleet) {
+    for (int i = 0; i < FLEET_SIZE; i++) {
+        free(fleet[i].shipMasts);  
+    }
+
+    free(fleet);
+}
